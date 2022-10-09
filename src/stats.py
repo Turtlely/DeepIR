@@ -9,6 +9,13 @@ md = pd.read_csv(config.ROOT_PATH+'/data/molecule_descriptors.csv')
 #print(irs.describe())
 print(md.describe())
 
+
+
+# Generate histogram for each row
+for column in md:
+    print(md[column])
+
+
 '''
 CAS-IRS information:
 8568 molecule entries
