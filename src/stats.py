@@ -2,18 +2,39 @@
 
 import config
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 irs = pd.read_csv(config.ROOT_PATH+'/data/CAS-IRS.csv')
-md = pd.read_csv(config.ROOT_PATH+'/data/molecule_descriptors.csv')
+md = pd.read_csv(config.ROOT_PATH+'/data/molecule_descriptors-WITH_NITRILE+ALKENE+ALKANE.csv',index_col=0)
+
+#for some reason the OH's are filled with NA's, will need to redo those later
+# It seems we have NO nitriles, this must be a SMARTS error
+
+md.drop(md.columns[len(md.columns)-1], axis=1, inplace=True)
+md = md.dropna()
 
 #print(irs.describe())
 print(md.describe())
 
+plt.xticks = [0,1,2,3,4,5,6,7,8,9,10]
 
 
-# Generate histogram for each row
-for column in md:
-    print(md[column])
+# Create a count plot for each functional group
+
+for (columnName, columnData) in md.iteritems():
+    print('Column Name : ', columnName)
+    ax = sns.countplot(x=columnData,palette=['#ff2d00'])
+    ax.bar_label(ax.containers[0])
+    #plt.show()
+    plt.savefig(f'{columnName}.png')
+
+
+
+
+
+
+
 
 
 '''

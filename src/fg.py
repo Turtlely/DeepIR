@@ -49,7 +49,10 @@ substructs_smarts = {'ALCOHOL': '[#6][OH]',
                     'NITRO':'[$([NX3](=O)=O),$([NX3+](=O)[O-])][!#8]',
                     'ACYLHALIDE':'[CX3](=[OX1])[F,Cl,Br,I]',
                     'NITRILE':'[$([NX3](=[OX1])(=[OX1])O),$([NX3+]([OX1-])(=[OX1])O)]',
-                    'PSAMINE':'[NX3;H2,H1;!$(NC=O)]'}
+                    'PSAMINE':'[NX3;H2,H1;!$(NC=O)]',
+                    'NITRILE':'[NX1]#[CX2]',
+                    'ALKENE':'[CX3]=[CX3]',
+                    'ALKANE':'[CX4;H0,H1,H2,H4]'}
 
 # substructs_smarts contents that have been turned into mol datatypes for processing
 substructs = {}
@@ -61,6 +64,7 @@ for i in substructs_smarts:
 # Search through every molecule listed in the IR spectra
 for n, cas in enumerate(CAS_list):
     # Logging purposes
+
     print(n, cas)
 
     # Assemble parameters for request
@@ -73,7 +77,6 @@ for n, cas in enumerate(CAS_list):
     # If an InChI is not retrieved, put a NaN in the place, and then drop all nan's later
     if inchi == "":
         functional_groups = {}
-        functional_groups['OH'] = np.nan
         fg.append(functional_groups)
         print("NaN Found")
         continue
@@ -103,7 +106,7 @@ for n, cas in enumerate(CAS_list):
         print(inchi)
 
         functional_groups = {}
-        functional_groups['ALCOHOL'] = np.nan
+        #functional_groups['ALCOHOL'] = np.nan
         fg.append(functional_groups)
         continue
 
@@ -113,4 +116,4 @@ md = pd.DataFrame(fg,index=CAS_list)
 md.index.name='CAS'
 
 # Save the dataframe as a csv
-md.to_csv(config.ROOT_PATH+"/data/molecule_descriptors.csv")
+md.to_csv(config.ROOT_PATH+"/data/molecule_descriptors-WITH_NITRILE+ALKENE+ALKANE.csv")
