@@ -32,7 +32,7 @@ for file in os.listdir(directory):
         try:
             print(n)
             #Load in the IR spectrum file
-            raw = JCAMP_reader(str(directory)[2:-1]+(filename))
+            raw = JCAMP_reader(str(directory)+"/"+(filename))
 
             # Do this so that the data is consistent, we will be using absorption and wavenumber (1/cm)
             JCAMP_calc_xsec(raw)

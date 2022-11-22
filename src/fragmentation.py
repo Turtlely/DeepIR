@@ -116,4 +116,4 @@ md = pd.DataFrame(fg,index=CAS_list)
 md.index.name='CAS'
 
 # Save the dataframe as a csv
-md.to_csv(config.ROOT_PATH+"/data/molecule_descriptors-WITH_NITRILE+ALKENE+ALKANE.csv")
+md.to_csv(config.ROOT_PATH+"/data/molecule_descriptors.csv")
