@@ -32,21 +32,36 @@ for file in os.listdir(directory):
         try:
             print(n)
             #Load in the IR spectrum file
-            raw = JCAMP_reader(str(directory)+"/"+(filename))
 
-            # Do this so that the data is consistent, we will be using absorption and wavenumber (1/cm)
-            JCAMP_calc_xsec(raw)
+            raw = JCAMP_reader(str(directory)[2:-1]+(filename))
+
+            # Do this so that the data is consistent, we will be using transmittance and wavenumber (1/cm)
+            #JCAMP_calc_xsec(raw)
+
+            # Convert x data to 1/cm
+            if (raw['xunits'].lower() in ('1/cm', 'cm-1', 'cm^-1')):
+                raw['wavenumbers'] = raw['x']          ## note that array() always performs a copy
+            elif (raw['xunits'].lower() in ('micrometers', 'um', 'wavelength (um)')):
+                raw['wavenumbers'] = 10000.0 / raw['x']
+            elif (raw['xunits'].lower() in ('nanometers', 'nm', 'wavelength (nm)')):
+                x = raw['x'] / 1000.0
+                raw['wavenumbers'] = 10000.0 / x
+            else:
+                print("Error in converting x values.")
+                quit()
+
+
 
             # Ensure that the data is in absorbance
             if raw['yunits'].lower() != 'absorbance':
-                print("Error, not in absorbance")
+                print("Error, in absorbance")
                 continue
             
             # Make sure that the spectrum data is there
             if raw['npoints'] == 0:
                 continue
 
-            #Normalize absorption data
+            #Normalize transmittance data
             y = NormalizeData(raw['y'])
             x = raw['wavenumbers']
 
