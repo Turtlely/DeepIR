@@ -2,9 +2,6 @@
 This script detects the presence of a group inside of a molecule.
 '''
 
-#from loss import f1, f1_loss
-
-
 # Import modules
 import config
 import pandas as pd
@@ -39,7 +36,7 @@ print("Num GPUs Available: ", tf.config.list_physical_devices('GPU'))
 
 '''START'''
 
-def start_run(R,batch_size,n_runs=200,train_split=0.90,mu=0,o=0.2,min_lr=0.0000001):
+def start_run(R,batch_size,n_runs=100,train_split=0.80,mu=0,o=0.2,min_lr=0.0000001):
 
     # Create data logging directory
     LOG_PATH = config.ROOT_PATH+"/data/"+R+"_RUN/"
@@ -77,9 +74,12 @@ def start_run(R,batch_size,n_runs=200,train_split=0.90,mu=0,o=0.2,min_lr=0.00000
     withR = md[md[R]>0][R]
     without_R = md[md[R]==0][R]
 
-    # Test set contains exactly 25 positives and negatives
-    withR_TEST = withR.sample(n=25,random_state=config.RANDOM_SEED)
-    without_R_TEST = without_R.sample(n=25,random_state=config.RANDOM_SEED)
+    # Test set contains exactly 50 positives and negatives
+    withR_TEST = withR.sample(n=50,random_state=config.RANDOM_SEED)
+    without_R_TEST = without_R.sample(n=50,random_state=config.RANDOM_SEED)
+
+    # Save the test set ID's so that we can manually check them later
+    #print(withR_TEST)
 
     withR_TRAIN = withR.drop(withR_TEST.index)
     without_R_TRAIN = without_R.drop(without_R_TEST.index)

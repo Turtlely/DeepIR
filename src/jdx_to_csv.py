@@ -18,16 +18,14 @@ directory = os.fsencode(IRS_PATH)
 #List to store the data
 data = []
 
+# Counter for how many molecules have been processed
 n=0
-
-#Function to normalize spectra
-def NormalizeData(data):
-    return (data - np.min(data)) / (np.max(data) - np.min(data))
 
 #Iterate through every file in the directory
 for file in os.listdir(directory):
     filename = os.fsdecode(file)
     if filename.endswith(".jdx"): 
+
         #Try catch because some files will not be interpolatable
         try:
             print(n)
@@ -35,12 +33,15 @@ for file in os.listdir(directory):
 
             raw = JCAMP_reader(str(directory)[2:-1]+(filename))
 
-            # Do this so that the data is consistent, we will be using transmittance and wavenumber (1/cm)
-            #JCAMP_calc_xsec(raw)
+            # Make sure that the spectrum data is there. Otherwise, skip to the next molecule
+            if raw['npoints'] == 0:
+                continue
+
+            # Data preprocessing that the data is consistent, we will be using transmittance and wavenumber (1/cm)
 
             # Convert x data to 1/cm
             if (raw['xunits'].lower() in ('1/cm', 'cm-1', 'cm^-1')):
-                raw['wavenumbers'] = raw['x']          ## note that array() always performs a copy
+                raw['wavenumbers'] = raw['x']    
             elif (raw['xunits'].lower() in ('micrometers', 'um', 'wavelength (um)')):
                 raw['wavenumbers'] = 10000.0 / raw['x']
             elif (raw['xunits'].lower() in ('nanometers', 'nm', 'wavelength (nm)')):
@@ -50,24 +51,30 @@ for file in os.listdir(directory):
                 print("Error in converting x values.")
                 quit()
 
-
-
-            # Ensure that the data is in absorbance
+            # Ensure that the data is in transmittance
             if raw['yunits'].lower() != 'absorbance':
-                print("Error, in absorbance")
-                continue
-            
-            # Make sure that the spectrum data is there
-            if raw['npoints'] == 0:
-                continue
+                print("Error, in absorbance. Converting to transmission % ")
+
+                # Convert to transmittance %
+
+                # Formula is transmittance % = 10^(-absorbance units)
+                raw['y'] = 10**(-raw['y'])
+                raw['yunits'] = 'TRANSMITTANCE'
+
+                # Correct for unphysical values
+                raw['y'][raw['y'] > 1.0] = 1
+                raw['y'][raw['y'] < 0.0] = 0
 
             #Normalize transmittance data
-            y = NormalizeData(raw['y'])
+            y = raw['y']
             x = raw['wavenumbers']
 
-            #Interpolate between 1000 and 3400 cm^-1, with 4800 data points
+            #Interpolate between 1000 and 3400 cm^-1, with 4800 data points                        
+            # TODO interpolation is custom set for each group
+            # Alcohol interpolates between 3700 and 1300
+
             f = interpolate.interp1d(x, y)
-            newx = np.linspace(1000,3400,4800)
+            newx = np.linspace(1000,4000,4800)
             newy = f(newx)
 
             #Scrape CAS Identification number
@@ -75,7 +82,10 @@ for file in os.listdir(directory):
 
             #add molecular entry in, remember to add in the CAS identification number
             data.append([CAS]+ newy.tolist())
+
+            # Update molecule number counter
             n+=1
+
         except Exception as e:
             #Log errors, most of these will be interpolation errors
             print("Error ",e)
