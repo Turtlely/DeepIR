@@ -225,6 +225,8 @@ def start_run(R,batch_size,n_runs=100,train_split=0.80,mu=0,o=0.2,min_lr=0.00000
     plt.legend(loc='best')
     plt.savefig(f"{LOG_PATH}{R}_roc_curve")
 
+    plt.clf()
+
     # Save metrics to a csv
     metrics = {"Accuracy": accuracy, "Precision": precision, "Recall": recall, "F1": f1}
     pd.DataFrame(metrics,index=[0]).to_csv(f"{LOG_PATH}TEST_METRICS.csv")
