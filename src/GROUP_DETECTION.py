@@ -78,7 +78,7 @@ def start_run(R,batch_size,n_runs=100,train_split=0.80,mu=0,o=0.2,min_lr=0.00000
     withR_TEST = withR.sample(n=50,random_state=config.RANDOM_SEED)
     without_R_TEST = without_R.sample(n=50,random_state=config.RANDOM_SEED)
 
-    # Save the test set ID's so that we can manually check them later
+    # Save the test set ID's so that we can manually check them later. purely for debugging
     #print(withR_TEST)
 
     withR_TRAIN = withR.drop(withR_TEST.index)
@@ -206,6 +206,25 @@ def start_run(R,batch_size,n_runs=100,train_split=0.80,mu=0,o=0.2,min_lr=0.00000
     recall = (tp/(tp+fn))
     f1 = (2*(tp/(tp+fp))*(tp/(tp+fn)))/((tp/(tp+fp))+(tp/(tp+fn)))
 
+    # Generate ROC and calculate AUC
+    from sklearn.metrics import roc_curve
+    from sklearn.metrics import auc
+
+    fpr, tpr, thresholds = roc_curve(md_TEST_Y,y_prediction.ravel())
+    auc = auc(fpr, tpr)
+    
+    # Clear plot so we can draw the ROC plot
+    plt.clf()
+
+    plt.figure(1)
+    plt.plot([0, 1], [0, 1], 'k--')
+    plt.plot(fpr, tpr, label='area = {:.3f}'.format(auc))
+    plt.xlabel('False positive rate')
+    plt.ylabel('True positive rate')
+    plt.title('ROC curve')
+    plt.legend(loc='best')
+    plt.savefig(f"{LOG_PATH}{R}_roc_curve")
+
     # Save metrics to a csv
     metrics = {"Accuracy": accuracy, "Precision": precision, "Recall": recall, "F1": f1}
     pd.DataFrame(metrics,index=[0]).to_csv(f"{LOG_PATH}TEST_METRICS.csv")
@@ -214,25 +233,3 @@ def start_run(R,batch_size,n_runs=100,train_split=0.80,mu=0,o=0.2,min_lr=0.00000
     model.save(f'{LOG_PATH}/{R}_MODEL')
 
     print(f"FINISHED {R} MODEL")
-
-
-'''
-TODO Add run logging functionality to log all aspects of a run in a spreadsheet. can be used to make data tables and graphs in paper for more details DONE
-The model has been successfully tested with detecting alkene groups and alcohol groups. once the model has been ironed out, it can be used for each of the 11 groups of interest.
-Analysis of model results is still needed
-
-Metrics to log for each model:
-1. Testing precision
-2. Testing recall
-3. Testing f1 score
-4. validation loss DONE
-5. validation accuracy DONE
-6. training loss DONE
-7. training accuracy DONE
-8. testing loss 
-9. testing accuracy
-
-create an automated pipeline for testing multiple models and generating evaluation analysis
-parameterize data augmentation step
-visualize saliency
-'''

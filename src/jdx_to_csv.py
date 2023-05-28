@@ -51,30 +51,42 @@ for file in os.listdir(directory):
                 print("Error in converting x values.")
                 quit()
 
-            # Ensure that the data is in transmittance
-            if raw['yunits'].lower() != 'absorbance':
-                print("Error, in absorbance. Converting to transmission % ")
+            # Ensure that the data is in % absorbance
+            if raw['yunits'].lower() == 'absorbance':
 
-                # Convert to transmittance %
+                print("Error, in absorbance units. Converting to absorbance % ")
+                 # Convert to transmittance %
 
                 # Formula is transmittance % = 10^(-absorbance units)
-                raw['y'] = 10**(-raw['y'])
-                raw['yunits'] = 'TRANSMITTANCE'
+                # Subtract by 1 to get absorbance %
+
+                raw['y'] = 1-10**(-raw['y'])
+                #raw['yunits'] = 'ABSORBANCE'
+
+                # Correct for unphysical values
+                raw['y'][raw['y'] > 1.0] = 1
+                raw['y'][raw['y'] < 0.0] = 0
+            
+            elif raw['yunits'].lower() == 'transmittance':
+                # Convert % Transmittance to % absorbance
+                raw['y'] = 1-raw['y']
 
                 # Correct for unphysical values
                 raw['y'][raw['y'] > 1.0] = 1
                 raw['y'][raw['y'] < 0.0] = 0
 
-            #Normalize transmittance data
+            else:
+                print("Unknown y unit. Aborting...")
+                continue
+
+            #set %absorbance data
             y = raw['y']
             x = raw['wavenumbers']
 
             #Interpolate between 1000 and 3400 cm^-1, with 4800 data points                        
-            # TODO interpolation is custom set for each group
-            # Alcohol interpolates between 3700 and 1300
 
             f = interpolate.interp1d(x, y)
-            newx = np.linspace(1000,4000,4800)
+            newx = np.linspace(1300,3700,4800)
             newy = f(newx)
 
             #Scrape CAS Identification number
@@ -95,7 +107,7 @@ for file in os.listdir(directory):
         continue
 
 #Print number of entries
-print("number of entrys", len(data))
+print("number of entries", len(data))
 
 #Save data to a csv file
 np.savetxt(config.ROOT_PATH+"/data/CAS-IRS.csv", data,delimiter =", ",fmt='%s')

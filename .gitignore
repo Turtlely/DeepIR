@@ -4,6 +4,9 @@
 #everything in data directory
 /data/*
 
+# Obsolete files
+/obsolete_programs/*
+
 #csv
 *.csv
 

@@ -1,7 +1,6 @@
 # This script highlights parts of the IR spectrum that are responsible for a models predictions
 # This script runs predictions on indiviudal molecules
 
-
 import config
 import tensorflow as tf
 from tensorflow.keras.models import load_model
@@ -22,10 +21,14 @@ session = InteractiveSession(config=CONFIG)
 print("Num GPUs Available: ", tf.config.list_physical_devices('GPU'))
 
 # Model Path
-model_PATH = config.ROOT_PATH + "/data/NITRO_RUN/NITRO_MODEL"
+model_PATH = config.ROOT_PATH + "/data/ALCOHOL_RUN/ALCOHOL_MODEL"
+
+# Ask user for the CAS number
+import sys
+CAS= sys.argv[1]
 
 # Spectrum Path
-IRS_PATH = config.ROOT_PATH + "/data/IRS/100-02-7.jdx"
+IRS_PATH = config.ROOT_PATH + "/data/IRS/"+CAS+".jdx"
 
 # Load in the model
 model = load_model(model_PATH)
@@ -57,15 +60,11 @@ if jcamp_dict['yunits'].upper() == "TRANSMITTANCE":
     # Correct for unphysical values
     jcamp_dict['y'][jcamp_dict['y'] > 1.0] = 1
     jcamp_dict['y'][jcamp_dict['y'] < 0.0] = 0
-    #jcamp_dict['yunits'] = '% ABSORBANCE'
-
 
 elif jcamp_dict['yunits'].upper() == "ABSORBANCE":
     # Convert to transmittance %
     # Formula is transmittance % = 10^(-absorbance units)
     jcamp_dict['y'] = 10**(-jcamp_dict['y'])
-    jcamp_dict['yunits'] = 'TRANSMITTANCE'
-    #jcamp_dict['yunits'] = '% ABSORBANCE'
 
     # Correct for unphysical values
     jcamp_dict['y'][jcamp_dict['y'] > 1.0] = 1
@@ -76,26 +75,23 @@ else:
     quit()
 
 # Interpolation stuff
+# Convert % Transmittance to % Absorbance, which the model was trained for
 y = 1-jcamp_dict['y'] 
 x = jcamp_dict['wavenumbers']
+jcamp_dict['yunits'] = '% ABSORBANCE'
 
 # Interpolate between 1000 and 3400 cm^-1
-
-# TODO interpolation is custom set for each group
-# Alcohol interpolates between 3700 and 1300
 
 # Interpolation range can be changed
 f = interpolate.interp1d(x, y)
 
 # Set interpolation range to be for the entire spectrum
-#newx = np.linspace(1300,3700,4800)
-newx = np.linspace(1000,3800,4800)
-
+newx = np.linspace(1300,3700,4800)
 newy = f(newx)
 
 # Plot transmittance
 
-plt.plot(x,1-y,c='black')
+plt.plot(x,y,c='black')
 
 # Reverse the x axis for easier reading
 plt.xlim(max(x), min(x))
@@ -156,4 +152,5 @@ plt.axvline(x=newx[-1],ymin=0,ymax=1,color='red',ls='--')
 # Generate plot of the transmission spectrum
 plt.title(f"{jcamp_dict['title']} {jcamp_dict['yunits']} Spectrum")
 plt.xlabel(jcamp_dict["xunits"])
-plt.show()
+#plt.show()
+plt.savefig(f"{config.ROOT_PATH}/data/saliency_maps/{CAS}.png")
