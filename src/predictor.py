@@ -1,3 +1,4 @@
+# Given a spectrum, predict the presence or absence of all possible functional groups
 # This script highlights parts of the IR spectrum that are responsible for a models predictions
 # This script runs predictions on indiviudal molecules
 
@@ -11,6 +12,7 @@ import numpy as np
 from tensorflow.compat.v1 import ConfigProto
 from tensorflow.compat.v1 import InteractiveSession
 import matplotlib.cm as cm
+import pandas as pd 
 
 # Required to allow training to not freeze on first epoch
 CONFIG = ConfigProto()
@@ -20,24 +22,26 @@ session = InteractiveSession(config=CONFIG)
 # Display GPU's available
 print("Num GPUs Available: ", tf.config.list_physical_devices('GPU'))
 
-
+# List of functional groups to search for
+functional_groups = ["ALCOHOL","ALDEHYDE","KETONE","ETHER","NITRO","ACYLHALIDE","NITRILE","ALKENE","ALKANE","ESTER","PRIMARY_AMINE","SECONDARY_AMINE","TERTIARY_AMINE","ARENE","CARBOXYLIC_ACID","AMIDE"]
 
 # Ask user for the CAS number
 import sys
-CAS= sys.argv[2]
-R = sys.argv[1]
-
-# Model Path
-model_PATH = config.ROOT_PATH + f"/data/{R}_RUN/{R}_MODEL"
+CAS= sys.argv[1]
 
 # Spectrum Path
 IRS_PATH = config.ROOT_PATH + "/data/IRS/"+CAS+".jdx"
 
-# Load in the model
-model = load_model(model_PATH)
-
 # Load in IRS file
 jcamp_dict = JCAMP_reader(IRS_PATH)
+
+
+# Smoothing function to highlight peaks in model attention
+def smooth(y, box_pts):
+    box = np.ones(box_pts)/box_pts
+    y_smooth = np.convolve(y, box, mode='same')
+    return y_smooth
+
 
 # Convert x units to 1/cm.
 if (jcamp_dict['xunits'].lower() in ('1/cm', 'cm-1', 'cm^-1')):
@@ -101,55 +105,67 @@ plt.xlim(max(x), min(x))
 
 newy = newy.reshape(1,6200,1)
 
-# Print a summary of the model architecture
-print(model.summary())
+# Preprocessing done
 
-# Model Prediction
-y_pred = model.predict(newy)
+# Starting the models
 
-print("RESULTS FOR",jcamp_dict['title'])
-print("Model output: ",y_pred)
+# Pandas dataframe to store the model predictions
+predictions = pd.DataFrame(columns=functional_groups)
 
-# Threshold for the model. specific for each model to get optimal performance
-threshold = 0.5
+# For each functional group, run the respective model
 
-if y_pred >= threshold:
-    print("Model Decision: Presence predicted")
-else:
-    print("Model Decision: Presence not predicted")
+for group in functional_groups:
+
+    # Model Path
+    model_PATH = config.ROOT_PATH + f"/data/{group}_RUN/{group}_MODEL"
+
+    # Load in the model
+    model = load_model(model_PATH)
+
+    # Model Prediction
+    y_pred = model.predict(newy)
+
+    # Get the optimal threshold value
+    opt_threshold = pd.read_csv(config.ROOT_PATH + f"/data/{group}_RUN/TEST_METRICS.csv").iloc[0]['Optimal Threshold']
+
+    if y_pred >= opt_threshold:
+        # Detected
+
+        # Saliency map generation
+        images = tf.Variable(newy, dtype=float)
+
+        # Generate gradient
+        with tf.GradientTape() as tape:
+            pred = model(images, training=False)
+
+        # Calculate the gradient
+        grads = tape.gradient(pred, images)
+
+        # Absolute value of the gradient
+        dgrad_abs = tf.math.abs(grads)
+        dgrad_max_ = np.max(dgrad_abs, axis=2)[0]
+
+        # normalize the gradient to range between 0 and 1
+        arr_min, arr_max  = np.min(dgrad_max_), np.max(dgrad_max_)
+        grad_eval = (dgrad_max_ - arr_min) / (arr_max - arr_min + 1e-18)
+
+        # Plot the saliency map
+        for xc in range(len(newx)):
+            color=plt.cm.Blues(smooth(grad_eval**2,50))
+            #color=plt.cm.Blues(smooth(grad_eval,50))
+
+            plt.axvline(x=newx[xc],ymin=0,ymax=1,color=color[xc],zorder=-1)
 
 
-# Saliency map generation
-images = tf.Variable(newy, dtype=float)
+        predictions.at[0,group] = "YES"
+        predictions.at[1,group] = np.round(tf.squeeze(tf.constant(y_pred-opt_threshold)).numpy(),3)
+    
+    if y_pred < opt_threshold:
+        # Not detected
+        predictions.at[0,group] = "NO"
+        predictions.at[1,group] = np.round(tf.squeeze(tf.constant(y_pred-opt_threshold)).numpy(),3)
 
-# Generate gradient
-with tf.GradientTape() as tape:
-    pred = model(images, training=False)
-
-# Calculate the gradient
-grads = tape.gradient(pred, images)
-
-# Absolute value of the gradient
-dgrad_abs = tf.math.abs(grads)
-dgrad_max_ = np.max(dgrad_abs, axis=2)[0]
-
-# normalize the gradient to range between 0 and 1
-arr_min, arr_max  = np.min(dgrad_max_), np.max(dgrad_max_)
-grad_eval = (dgrad_max_ - arr_min) / (arr_max - arr_min + 1e-18)
-
-# Smoothing function to highlight peaks in model attention
-def smooth(y, box_pts):
-    box = np.ones(box_pts)/box_pts
-    y_smooth = np.convolve(y, box, mode='same')
-    return y_smooth
-
-
-# Plot the saliency map
-for xc in range(len(newx)):
-    color=plt.cm.Blues(smooth(grad_eval**2,50))
-    #color=plt.cm.Blues(smooth(grad_eval,50))
-
-    plt.axvline(x=newx[xc],ymin=0,ymax=1,color=color[xc],zorder=-1)
+print(predictions)
 
 # Borders of where the model looks
 plt.axvline(x=newx[0],ymin=0,ymax=1,color='red',ls='--')
@@ -159,4 +175,3 @@ plt.axvline(x=newx[-1],ymin=0,ymax=1,color='red',ls='--')
 plt.title(f"{jcamp_dict['title']} {jcamp_dict['yunits']} Spectrum")
 plt.xlabel(jcamp_dict["xunits"])
 plt.show()
-#plt.savefig(f"{config.ROOT_PATH}/data/saliency_maps/{CAS}.png")

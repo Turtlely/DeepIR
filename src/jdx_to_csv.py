@@ -86,7 +86,10 @@ for file in os.listdir(directory):
             #Interpolate between 1000 and 3400 cm^-1, with 4800 data points                        
 
             f = interpolate.interp1d(x, y)
-            newx = np.linspace(1300,3700,4800)
+            #newx = np.linspace(1300,3700,4800)
+            #newx = np.linspace(1000,3700,5400)
+            newx = np.linspace(600,3700,6200)
+            #newx = np.linspace(600,4000,6800)
             newy = f(newx)
 
             #Scrape CAS Identification number
@@ -110,4 +113,4 @@ for file in os.listdir(directory):
 print("number of entries", len(data))
 
 #Save data to a csv file
-np.savetxt(config.ROOT_PATH+"/data/CAS-IRS.csv", data,delimiter =", ",fmt='%s')
+np.savetxt(config.ROOT_PATH+"/data/CAS-IRS-600-4000.csv", data,delimiter =", ",fmt='%s')

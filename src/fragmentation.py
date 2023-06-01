@@ -39,20 +39,30 @@ fg = []
 # https://www.daylight.com/dayhtml_tutorials/languages/smarts/smarts_examples.html#C
 
 # This will allow for unique detection of primary or secondary amines, that ARE NOT amides
+# TODO expand what the model ensemble can detect. Remove PS amines, more useful to just know if its 1* or 2*
+# Replaced amide with specifically primary secondary and tert
+#14062 molecules
 
 # Modify this to choose what functional groups will be included in a molecule descriptor
-substructs_smarts = {'ALCOHOL': '[#6][OH]',
+
+substructs_smarts = {'ALCOHOL': '[OX2H][CX3,!O]',
                     'ALDEHYDE':'[CX3H1](=O)[#6]',
-                    'AMIDE':'[NX3][CX3](=[OX1])[#6]',
+                    'PAMIDE':'[NX3;H2][CX3](=[OX1])[#6]',
+                    'SAMIDE':'[#6][NX3;H1][CX3](=[OX1])[#6]',
+                    'TAMIDE':'[#6][NX3]([#6])[CX3](=[OX1])[#6]',
                     'KETONE':'[#6][CX3](=O)[#6]',
                     'ETHER':'[OD2]([#6])[#6]',
                     'NITRO':'[$([NX3](=O)=O),$([NX3+](=O)[O-])][!#8]',
                     'ACYLHALIDE':'[CX3](=[OX1])[F,Cl,Br,I]',
-                    'NITRILE':'[$([NX3](=[OX1])(=[OX1])O),$([NX3+]([OX1-])(=[OX1])O)]',
-                    'PSAMINE':'[NX3;H2,H1;!$(NC=O)]',
                     'NITRILE':'[NX1]#[CX2]',
                     'ALKENE':'[CX3]=[CX3]',
-                    'ALKANE':'[CX4;H0,H1,H2,H4]'}
+                    'ALKANE':'[CX4;H0,H1,H2,H4]',
+                    'ESTER':'[#6][CX3](=O)[OX2H0][#6]',
+                    'PRIMARY_AMINE':'[#7;H2;X3][#6]',
+                    'SECONDARY_AMINE':'[#6][#7;H1;X3][#6]',
+                    'TERTIARY_AMINE':'[#6][#7;X3]([#6])[#6]',
+                    'ARENE':'c',
+                    'CARBOXYLIC_ACID':'[#6,H][CX3](=O)[OX2H1]'}
 
 # substructs_smarts contents that have been turned into mol datatypes for processing
 substructs = {}
@@ -64,7 +74,6 @@ for i in substructs_smarts:
 # Search through every molecule listed in the IR spectra
 for n, cas in enumerate(CAS_list):
     # Logging purposes
-
     print(n, cas)
 
     # Assemble parameters for request
@@ -73,7 +82,7 @@ for n, cas in enumerate(CAS_list):
     # Fetch InChI
     inchi = requests.get(URL, params=params).text
 
-    
+    print(inchi)
     # If an InChI is not retrieved, put a NaN in the place, and then drop all nan's later
     if inchi == "":
         functional_groups = {}
@@ -85,7 +94,8 @@ for n, cas in enumerate(CAS_list):
     # Errors may occur
     try:
         # Convert inchi to molecule
-        mol = Chem.MolFromInchi(inchi, treatWarningAsError=True)   
+        #mol = Chem.MolFromInchi(inchi, treatWarningAsError=True)   
+        mol = Chem.MolFromInchi(inchi,treatWarningAsError=True)   
 
         # Reset the temporary dictionary
         functional_groups = {}
@@ -99,7 +109,7 @@ for n, cas in enumerate(CAS_list):
         fg.append(functional_groups)
         
         # Creating each compound's picture, optional, used for testing
-        # Draw.MolToFile(mol,config.ROOT_PATH+"/data/images/"+cas+'.png')
+        Draw.MolToFile(mol,config.ROOT_PATH+"/data/images/"+cas+'.png')
 
     except Exception as e:
         print(e)
@@ -112,8 +122,10 @@ for n, cas in enumerate(CAS_list):
 
 
 # Create the dataframe to store molecule descriptors
+#md = pd.DataFrame(fg,index=CAS_list)
 md = pd.DataFrame(fg,index=CAS_list)
+
 md.index.name='CAS'
 
 # Save the dataframe as a csv
-md.to_csv(config.ROOT_PATH+"/data/molecule_descriptors.csv")
+md.to_csv(config.ROOT_PATH+"/data/molecule_descriptors_second_attempt.csv")
