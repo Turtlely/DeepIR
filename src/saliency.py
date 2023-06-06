@@ -30,6 +30,8 @@ R = sys.argv[1]
 # Model Path
 model_PATH = config.ROOT_PATH + f"/data/{R}_RUN/{R}_MODEL"
 
+model_PATH= config.ROOT_PATH +"/data/FINAL RUN, WORKING GOOD/ALCOHOL_RUN/ALCOHOL_MODEL"
+
 # Spectrum Path
 IRS_PATH = config.ROOT_PATH + "/data/IRS/"+CAS+".jdx"
 
@@ -104,6 +106,13 @@ newy = newy.reshape(1,6200,1)
 # Print a summary of the model architecture
 print(model.summary())
 
+# Model visualization
+import visualkeras
+from PIL import ImageFont
+font = ImageFont.truetype("/home/zied/fonts/Hack/Hack-Regular.ttf", 42, encoding="unic")
+visualkeras.layered_view(model,  legend=True, font=font, to_file='output.png',spacing=100)
+
+
 # Model Prediction
 y_pred = model.predict(newy)
 
@@ -143,10 +152,10 @@ def smooth(y, box_pts):
     y_smooth = np.convolve(y, box, mode='same')
     return y_smooth
 
-
+'''
 # Plot the saliency map
 for xc in range(len(newx)):
-    color=plt.cm.Blues(smooth(grad_eval**2,50))
+    color=plt.cm.Greys(smooth(5*grad_eval**3,50))
     #color=plt.cm.Blues(smooth(grad_eval,50))
 
     plt.axvline(x=newx[xc],ymin=0,ymax=1,color=color[xc],zorder=-1)
@@ -154,9 +163,11 @@ for xc in range(len(newx)):
 # Borders of where the model looks
 plt.axvline(x=newx[0],ymin=0,ymax=1,color='red',ls='--')
 plt.axvline(x=newx[-1],ymin=0,ymax=1,color='red',ls='--')
-
+'''
 # Generate plot of the transmission spectrum
-plt.title(f"{jcamp_dict['title']} {jcamp_dict['yunits']} Spectrum")
+#plt.title(f"{jcamp_dict['title']} {jcamp_dict['yunits']} Spectrum")
 plt.xlabel(jcamp_dict["xunits"])
+plt.ylabel(jcamp_dict["yunits"])
+plt.ylim((0,1))
 plt.show()
 #plt.savefig(f"{config.ROOT_PATH}/data/saliency_maps/{CAS}.png")
