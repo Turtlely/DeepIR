@@ -51,9 +51,6 @@ def smooth(y, n=51):
 '''START'''
 
 def start_run(R,batch_size,n_runs=1,train_split=0.80,mu=0,o=0.02,min_lr=0.0000001):
-
-    
-
     '''DATA PREPROCESSING'''
 
     # Dataset Path:
@@ -90,8 +87,8 @@ def start_run(R,batch_size,n_runs=1,train_split=0.80,mu=0,o=0.02,min_lr=0.000000
     withR = md[md[R]>0][R]
     without_R = md[md[R]==0][R]
 
-    print(withR)
-    print(without_R)
+    #print(withR)
+    #print(without_R)
     
 
     # Test set contains exactly 50 positives and negatives
@@ -99,9 +96,8 @@ def start_run(R,batch_size,n_runs=1,train_split=0.80,mu=0,o=0.02,min_lr=0.000000
     without_R_TEST = without_R.sample(n=50,random_state=config.RANDOM_SEED)
 
     # Save the test set ID's so that we can manually check them later. purely for debugging
-    print(len(withR_TEST))
-    print(len(without_R_TEST))
-    #quit()
+    #print(len(withR_TEST))
+    #print(len(without_R_TEST))
 
     withR_TRAIN = withR.drop(withR_TEST.index)
     without_R_TRAIN = without_R.drop(without_R_TEST.index)
@@ -133,14 +129,13 @@ def start_run(R,batch_size,n_runs=1,train_split=0.80,mu=0,o=0.02,min_lr=0.000000
         print(e)
         # Do not remove any
 
-
     # Combine both sets of data and scramble rows
     # The training dataset should now have about 80% of the initial majority and minority class
     md_TRAIN = irs.join(pd.concat([withR_TRAIN,without_R_TRAIN])).dropna() # NOT shuffled because the data will be further processed in augmentation
     md_TEST = irs.join(pd.concat([withR_TEST,without_R_TEST]).sample(frac=1.0)).dropna() # Shuffled because the test set is pretty much complete
 
     print(pd.concat([withR_TEST,without_R_TEST]).describe())
-    quit()
+
     '''DATA AUGMENTATION'''
 
     

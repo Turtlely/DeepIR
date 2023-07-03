@@ -8,10 +8,9 @@ import config
 md_path = config.ROOT_PATH+"/data/molecule_descriptors.csv"
 md = pd.read_csv(md_path,index_col=0,header=0)
 
-'''
+
 for col in md.columns:
     print(f"TRAINING {col} MODEL")
     start_run(col,batch_size=64)
-'''
 
-start_run("ALCOHOL",batch_size=64)
+#start_run("ALCOHOL",batch_size=64)

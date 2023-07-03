@@ -8,3 +8,4 @@ import config
 os.mkdir(config.ROOT_PATH+"/data")
 os.mkdir(config.ROOT_PATH+"/data/IRS")
 os.mkdir(config.ROOT_PATH+"/data/saliency_maps")
+os.mkdir(config.ROOT_PATH+"/data/images")

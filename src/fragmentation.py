@@ -38,11 +38,6 @@ fg = []
 # SMARTS strings from here
 # https://www.daylight.com/dayhtml_tutorials/languages/smarts/smarts_examples.html#C
 
-# This will allow for unique detection of primary or secondary amines, that ARE NOT amides
-# TODO expand what the model ensemble can detect. Remove PS amines, more useful to just know if its 1* or 2*
-# Replaced amide with specifically primary secondary and tert
-#14062 molecules
-
 # Modify this to choose what functional groups will be included in a molecule descriptor
 
 substructs_smarts = {'ALCOHOL': '[OX2H][CX3,!O]',
@@ -128,4 +123,4 @@ md = pd.DataFrame(fg,index=CAS_list)
 md.index.name='CAS'
 
 # Save the dataframe as a csv
-md.to_csv(config.ROOT_PATH+"/data/molecule_descriptors_second_attempt.csv")
+md.to_csv(config.ROOT_PATH+"/data/molecule_descriptors.csv")
