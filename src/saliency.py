@@ -30,7 +30,7 @@ R = sys.argv[1]
 # Model Path
 model_PATH = config.ROOT_PATH + f"/data/{R}_RUN/{R}_MODEL"
 
-model_PATH= config.ROOT_PATH +"/data/FINAL RUN, WORKING GOOD/ALCOHOL_RUN/ALCOHOL_MODEL"
+#model_PATH= config.ROOT_PATH +"/data/FINAL RUN, WORKING GOOD/ALCOHOL_RUN/ALCOHOL_MODEL"
 
 # Spectrum Path
 IRS_PATH = config.ROOT_PATH + "/data/IRS/"+CAS+".jdx"
@@ -105,13 +105,6 @@ newy = newy.reshape(1,6200,1)
 
 # Print a summary of the model architecture
 print(model.summary())
-
-# Model visualization
-import visualkeras
-from PIL import ImageFont
-font = ImageFont.truetype("/home/zied/fonts/Hack/Hack-Regular.ttf", 42, encoding="unic")
-visualkeras.layered_view(model,  legend=True, font=font, to_file='output.png',spacing=100)
-
 
 # Model Prediction
 y_pred = model.predict(newy)
