@@ -1,5 +1,7 @@
+# This script allows for batch testing models. Pass the program a list of CAS ID numbers to test.
+
+# Imports
 import os
-import subprocess
 import config
 
 # Automate running saliency.py on multiple molecules

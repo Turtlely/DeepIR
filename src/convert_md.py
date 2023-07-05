@@ -1,3 +1,6 @@
+# Utility script, you probably dont need to use this.
+# This did some processing work when running experiments, but is now pretty much obsolete.
+
 import config
 import pandas as pd
 

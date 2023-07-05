@@ -5,13 +5,12 @@
 import config
 import tensorflow as tf
 from tensorflow.keras.models import load_model
-from jcamp import JCAMP_reader,JCAMP_calc_xsec
+from jcamp import JCAMP_reader
 from scipy import interpolate
 import matplotlib.pyplot as plt
 import numpy as np
 from tensorflow.compat.v1 import ConfigProto
 from tensorflow.compat.v1 import InteractiveSession
-import matplotlib.cm as cm
 import pandas as pd 
 
 # Required to allow training to not freeze on first epoch

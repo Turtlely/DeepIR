@@ -8,7 +8,8 @@ import config
 md_path = config.ROOT_PATH+"/data/molecule_descriptors.csv"
 md = pd.read_csv(md_path,index_col=0,header=0)
 
-
+# Train a model for each functional group.
+# DEFAULT: Batch size=64
 for col in md.columns:
     print(f"TRAINING {col} MODEL")
     start_run(col,batch_size=64)

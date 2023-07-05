@@ -1,9 +1,6 @@
-# Create molecule descriptors for each of the molecules that has an IR spectra
-
-# Molecule descriptors are dictionaries that contain information about a molecule:
-# This includes:
-#   1. Counts of the functional groups specified in the substructs_smarts dictionary
-
+# Create molecular_descriptors.csv
+# This is a spreadsheet indexed by individual molecule CAS ID's, where each column corresponds to a functional group.
+# If a functional group is present in a molecule, the corresponding cell will be filled with 1, otherwise it will be 0
 
 # Imports
 import config
@@ -26,6 +23,7 @@ df = pd.read_csv(CSV_PATH,header=None,index_col=0,usecols=[0])
 # Get all the CAS id's
 CAS_list = df.index.values.tolist()
 
+# How many molecules we're working with
 print(len(CAS_list))
 
 # Request parameters
@@ -89,7 +87,6 @@ for n, cas in enumerate(CAS_list):
     # Errors may occur
     try:
         # Convert inchi to molecule
-        #mol = Chem.MolFromInchi(inchi, treatWarningAsError=True)   
         mol = Chem.MolFromInchi(inchi,treatWarningAsError=True)   
 
         # Reset the temporary dictionary
@@ -97,8 +94,11 @@ for n, cas in enumerate(CAS_list):
 
         # Find number of functional group matches
         for i in substructs:
-            match = len(mol.GetSubstructMatches(substructs[i]))
-            functional_groups[i] = match
+            # Return 1 if a functional group is found, otherwise 0
+            if len(mol.GetSubstructMatches(substructs[i])) != 0:
+                functional_groups[i] = 1
+            else:
+                functional_groups[i] = 0
 
         # Add to molecule descriptor to functional group log
         fg.append(functional_groups)
@@ -111,13 +111,11 @@ for n, cas in enumerate(CAS_list):
         print(inchi)
 
         functional_groups = {}
-        #functional_groups['ALCOHOL'] = np.nan
         fg.append(functional_groups)
         continue
 
 
 # Create the dataframe to store molecule descriptors
-#md = pd.DataFrame(fg,index=CAS_list)
 md = pd.DataFrame(fg,index=CAS_list)
 
 md.index.name='CAS'

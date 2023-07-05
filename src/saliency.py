@@ -4,7 +4,7 @@
 import config
 import tensorflow as tf
 from tensorflow.keras.models import load_model
-from jcamp import JCAMP_reader,JCAMP_calc_xsec
+from jcamp import JCAMP_reader
 from scipy import interpolate
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,8 +20,6 @@ session = InteractiveSession(config=CONFIG)
 # Display GPU's available
 print("Num GPUs Available: ", tf.config.list_physical_devices('GPU'))
 
-
-
 # Ask user for the CAS number
 import sys
 CAS= sys.argv[2]
@@ -29,8 +27,6 @@ R = sys.argv[1]
 
 # Model Path
 model_PATH = config.ROOT_PATH + f"/data/{R}_RUN/{R}_MODEL"
-
-#model_PATH= config.ROOT_PATH +"/data/FINAL RUN, WORKING GOOD/ALCOHOL_RUN/ALCOHOL_MODEL"
 
 # Spectrum Path
 IRS_PATH = config.ROOT_PATH + "/data/IRS/"+CAS+".jdx"
@@ -113,7 +109,7 @@ print("RESULTS FOR",jcamp_dict['title'])
 print("Model output: ",y_pred)
 
 # Threshold for the model. specific for each model to get optimal performance
-threshold = 0.5
+threshold = config.thresholds.get(R)
 
 if y_pred >= threshold:
     print("Model Decision: Presence predicted")

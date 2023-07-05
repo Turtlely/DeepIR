@@ -61,8 +61,7 @@ for file in os.listdir(directory):
                 # Subtract by 1 to get absorbance %
 
                 raw['y'] = 1-10**(-raw['y'])
-                #raw['yunits'] = 'ABSORBANCE'
-
+                
                 # Correct for unphysical values
                 raw['y'][raw['y'] > 1.0] = 1
                 raw['y'][raw['y'] < 0.0] = 0
